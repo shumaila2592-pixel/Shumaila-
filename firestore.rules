@@ -1,0 +1,236 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: default deny everything unless explicitly permitted below
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Reusable Hardened Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'shumaila2592@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isVerifiedUser() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isOptStr(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isReqStr(data, field, minLen, maxLen) {
+      return (field in data) && data[field] is string && data[field].size() >= minLen && data[field].size() <= maxLen;
+    }
+
+    // --- Validation Blueprints ---
+    function isValidSiteSettings(data) {
+      return data.keys().hasAll([
+          'trustName', 'schoolName', 'shortName', 'tagline', 'heroHeading',
+          'vision', 'mission', 'address', 'phonePrimary', 'whatsappNumber',
+          'businessHours', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'trustName', 'schoolName', 'shortName', 'tagline', 'heroBadge',
+          'heroHeading', 'heroSubheading', 'heroDescription', 'heroBannerUrl',
+          'admissionsOpen', 'admissionHeading', 'admissionSubheading', 'admissionBannerNote',
+          'aboutOverview', 'vision', 'mission', 'philosophy', 'commitment', 'futureGoals',
+          'address', 'phonePrimary', 'phoneSecondary', 'whatsappNumber', 'officialEmail',
+          'businessHours', 'facebookUrl', 'instagramUrl', 'youtubeUrl', 'updatedAt'
+        ]) &&
+        isReqStr(data, 'trustName', 2, 140) &&
+        isReqStr(data, 'schoolName', 2, 160) &&
+        isReqStr(data, 'shortName', 2, 40) &&
+        isReqStr(data, 'tagline', 2, 200) &&
+        isOptStr(data, 'heroBadge', 80) &&
+        isReqStr(data, 'heroHeading', 2, 160) &&
+        isOptStr(data, 'heroSubheading', 200) &&
+        isOptStr(data, 'heroDescription', 500) &&
+        isOptStr(data, 'heroBannerUrl', 500) &&
+        (!('admissionsOpen' in data) || data.admissionsOpen is bool) &&
+        isOptStr(data, 'admissionHeading', 140) &&
+        isOptStr(data, 'admissionSubheading', 220) &&
+        isOptStr(data, 'admissionBannerNote', 400) &&
+        isOptStr(data, 'aboutOverview', 2000) &&
+        isReqStr(data, 'vision', 10, 800) &&
+        isReqStr(data, 'mission', 10, 800) &&
+        isOptStr(data, 'philosophy', 1200) &&
+        isOptStr(data, 'commitment', 1200) &&
+        isOptStr(data, 'futureGoals', 1200) &&
+        isReqStr(data, 'address', 5, 300) &&
+        isReqStr(data, 'phonePrimary', 8, 25) &&
+        isOptStr(data, 'phoneSecondary', 25) &&
+        isReqStr(data, 'whatsappNumber', 8, 25) &&
+        isOptStr(data, 'officialEmail', 140) &&
+        isReqStr(data, 'businessHours', 2, 250) &&
+        isOptStr(data, 'facebookUrl', 300) &&
+        isOptStr(data, 'instagramUrl', 300) &&
+        isOptStr(data, 'youtubeUrl', 300) &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidCourse(data) {
+      return data.keys().hasAll(['title', 'category', 'shortDescription', 'isActive', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'title', 'category', 'shortDescription', 'imageUrl',
+          'eligibility', 'duration', 'fees', 'verifiedDetails',
+          'displayOrder', 'isActive', 'updatedAt'
+        ]) &&
+        isReqStr(data, 'title', 2, 120) &&
+        data.category in ['kindergarten', 'school', 'iti', 'diploma', 'computer', 'paramedical'] &&
+        isReqStr(data, 'shortDescription', 5, 400) &&
+        isOptStr(data, 'imageUrl', 500) &&
+        isOptStr(data, 'eligibility', 250) &&
+        isOptStr(data, 'duration', 120) &&
+        isOptStr(data, 'fees', 120) &&
+        isOptStr(data, 'verifiedDetails', 1000) &&
+        (!('displayOrder' in data) || (data.displayOrder is int && data.displayOrder >= 0 && data.displayOrder <= 1000)) &&
+        data.isActive is bool &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidGalleryItem(data) {
+      return data.keys().hasAll(['title', 'category', 'imageUrl', 'createdAt']) &&
+        data.keys().hasOnly(['title', 'category', 'caption', 'imageUrl', 'displayOrder', 'createdAt']) &&
+        isReqStr(data, 'title', 2, 140) &&
+        data.category in [
+          'School Activities',
+          'Classroom Activities',
+          'Kindergarten',
+          'Computer Courses',
+          'Technical Training',
+          'Paramedical Courses',
+          'Events & Celebrations'
+        ] &&
+        isOptStr(data, 'caption', 350) &&
+        isReqStr(data, 'imageUrl', 2, 800000) &&
+        (!('displayOrder' in data) || (data.displayOrder is int && data.displayOrder >= 0 && data.displayOrder <= 1000)) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidAnnouncement(data) {
+      return data.keys().hasAll(['title', 'body', 'isActive', 'createdAt']) &&
+        data.keys().hasOnly(['title', 'body', 'isActive', 'createdAt']) &&
+        isReqStr(data, 'title', 2, 160) &&
+        isReqStr(data, 'body', 2, 600) &&
+        data.isActive is bool &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidEnquiry(data) {
+      return data.keys().hasAll(['enquiryType', 'studentName', 'applyingFor', 'mobileNumber', 'status', 'createdAt']) &&
+        data.keys().hasOnly([
+          'enquiryType', 'studentName', 'parentName', 'dateOfBirth',
+          'applyingFor', 'mobileNumber', 'email', 'address',
+          'previousSchool', 'message', 'status', 'createdAt'
+        ]) &&
+        data.enquiryType in ['school_admission', 'course_enquiry', 'general_contact'] &&
+        isReqStr(data, 'studentName', 2, 120) &&
+        isOptStr(data, 'parentName', 120) &&
+        isOptStr(data, 'dateOfBirth', 30) &&
+        isReqStr(data, 'applyingFor', 2, 140) &&
+        isReqStr(data, 'mobileNumber', 8, 25) &&
+        isOptStr(data, 'email', 140) &&
+        isOptStr(data, 'address', 350) &&
+        isOptStr(data, 'previousSchool', 160) &&
+        isOptStr(data, 'message', 1200) &&
+        data.status in ['new', 'reviewed', 'contacted'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt']) &&
+        data.keys().hasOnly(['email', 'displayName', 'role', 'createdAt']) &&
+        isReqStr(data, 'email', 5, 140) &&
+        isOptStr(data, 'displayName', 120) &&
+        data.role == 'admin' &&
+        data.createdAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    // 1. Public Institutional Settings (non-PII)
+    match /siteSettings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow create: if isValidId(settingId) && isAdmin() && isValidSiteSettings(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isValidId(settingId) && isAdmin() && isValidSiteSettings(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isValidId(settingId) && isAdmin();
+    }
+
+    // 2. Public Courses Catalog
+    match /courses/{courseId} {
+      allow get: if isValidId(courseId);
+      allow list: if true;
+      allow create: if isValidId(courseId) && isAdmin() && isValidCourse(incoming()) && incoming().updatedAt == request.time;
+      allow update: if isValidId(courseId) && isAdmin() && isValidCourse(incoming()) && incoming().updatedAt == request.time;
+      allow delete: if isValidId(courseId) && isAdmin();
+    }
+
+    // 3. Public Gallery Items
+    match /gallery/{itemId} {
+      allow get: if isValidId(itemId);
+      allow list: if true;
+      allow create: if isValidId(itemId) && isAdmin() && isValidGalleryItem(incoming()) && incoming().createdAt == request.time;
+      allow update: if isValidId(itemId) && isAdmin() && isValidGalleryItem(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(itemId) && isAdmin();
+    }
+
+    // 4. Public Announcements
+    match /announcements/{announcementId} {
+      allow get: if isValidId(announcementId);
+      allow list: if true;
+      allow create: if isValidId(announcementId) && isAdmin() && isValidAnnouncement(incoming()) && incoming().createdAt == request.time;
+      allow update: if isValidId(announcementId) && isAdmin() && isValidAnnouncement(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(announcementId) && isAdmin();
+    }
+
+    // 5. Private Student/Parent Enquiries (Contains PII — strict admin-only read/list/update/delete)
+    match /enquiries/{enquiryId} {
+      allow create: if isValidId(enquiryId) &&
+        isValidEnquiry(incoming()) &&
+        incoming().status == 'new' &&
+        incoming().createdAt == request.time;
+      allow get: if isValidId(enquiryId) && isAdmin();
+      allow list: if isAdmin() && resource.data.status in ['new', 'reviewed', 'contacted'];
+      allow update: if isValidId(enquiryId) &&
+        isAdmin() &&
+        isValidEnquiry(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow delete: if isValidId(enquiryId) && isAdmin();
+    }
+
+    // 6. Admin Users Registry
+    match /admins/{adminUid} {
+      allow get: if isValidId(adminUid) && (isAdmin() || (isVerifiedUser() && request.auth.uid == adminUid));
+      allow list: if isAdmin() && resource.data.role == 'admin';
+      allow create: if isValidId(adminUid) && isAdmin() && isValidAdminUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isValidId(adminUid) && isAdmin() && isValidAdminUser(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(adminUid) && isAdmin() && request.auth.uid != adminUid;
+    }
+  }
+}

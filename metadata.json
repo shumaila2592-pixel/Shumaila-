@@ -1,0 +1,8 @@
+{
+  "name": "Zulekha Begam Educational Trust | ZBEM School",
+  "description": "Official portfolio and admissions portal for Zulekha Begam Educational Trust and Zulekha Begum English Medium School (ZBEM School), Bhiwandi — Kindergarten, Primary School (1st to 5th), ITI, Diploma, Computer, and Paramedical courses.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

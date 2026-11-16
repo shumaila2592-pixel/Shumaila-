@@ -1,0 +1,178 @@
+{
+  "entities": {
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Public institutional settings, banners, about copy, contact details, business hours, and social links for Zulekha Begam Educational Trust.",
+      "type": "object",
+      "properties": {
+        "trustName": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "schoolName": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "shortName": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "tagline": { "type": "string", "minLength": 2, "maxLength": 200 },
+        "heroBadge": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "heroHeading": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "heroSubheading": { "type": "string", "minLength": 2, "maxLength": 200 },
+        "heroDescription": { "type": "string", "minLength": 2, "maxLength": 500 },
+        "heroBannerUrl": { "type": "string", "minLength": 0, "maxLength": 500 },
+        "admissionsOpen": { "type": "boolean" },
+        "admissionHeading": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "admissionSubheading": { "type": "string", "minLength": 2, "maxLength": 220 },
+        "admissionBannerNote": { "type": "string", "minLength": 0, "maxLength": 400 },
+        "aboutOverview": { "type": "string", "minLength": 10, "maxLength": 2000 },
+        "vision": { "type": "string", "minLength": 10, "maxLength": 800 },
+        "mission": { "type": "string", "minLength": 10, "maxLength": 800 },
+        "philosophy": { "type": "string", "minLength": 10, "maxLength": 1200 },
+        "commitment": { "type": "string", "minLength": 10, "maxLength": 1200 },
+        "futureGoals": { "type": "string", "minLength": 10, "maxLength": 1200 },
+        "address": { "type": "string", "minLength": 5, "maxLength": 300 },
+        "phonePrimary": { "type": "string", "minLength": 8, "maxLength": 25 },
+        "phoneSecondary": { "type": "string", "minLength": 0, "maxLength": 25 },
+        "whatsappNumber": { "type": "string", "minLength": 8, "maxLength": 25 },
+        "officialEmail": { "type": "string", "minLength": 0, "maxLength": 140 },
+        "businessHours": { "type": "string", "minLength": 2, "maxLength": 250 },
+        "facebookUrl": { "type": "string", "minLength": 0, "maxLength": 300 },
+        "instagramUrl": { "type": "string", "minLength": 0, "maxLength": 300 },
+        "youtubeUrl": { "type": "string", "minLength": 0, "maxLength": 300 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "trustName",
+        "schoolName",
+        "shortName",
+        "tagline",
+        "heroHeading",
+        "vision",
+        "mission",
+        "address",
+        "phonePrimary",
+        "whatsappNumber",
+        "businessHours",
+        "updatedAt"
+      ]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Academic, Kindergarten, ITI Technical, Diploma, Computer, or Paramedical course offered by the institution.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "category": {
+          "type": "string",
+          "enum": [
+            "kindergarten",
+            "school",
+            "iti",
+            "diploma",
+            "computer",
+            "paramedical"
+          ]
+        },
+        "shortDescription": { "type": "string", "minLength": 5, "maxLength": 400 },
+        "imageUrl": { "type": "string", "minLength": 0, "maxLength": 500 },
+        "eligibility": { "type": "string", "minLength": 0, "maxLength": 250 },
+        "duration": { "type": "string", "minLength": 0, "maxLength": 120 },
+        "fees": { "type": "string", "minLength": 0, "maxLength": 120 },
+        "verifiedDetails": { "type": "string", "minLength": 0, "maxLength": 1000 },
+        "displayOrder": { "type": "integer" },
+        "isActive": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "shortDescription", "isActive", "updatedAt"]
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "Photograph displayed in the institutional gallery.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "category": {
+          "type": "string",
+          "enum": [
+            "School Activities",
+            "Classroom Activities",
+            "Kindergarten",
+            "Computer Courses",
+            "Technical Training",
+            "Paramedical Courses",
+            "Events & Celebrations"
+          ]
+        },
+        "caption": { "type": "string", "minLength": 0, "maxLength": 350 },
+        "imageUrl": { "type": "string", "minLength": 2, "maxLength": 800000 },
+        "displayOrder": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "imageUrl", "createdAt"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Institutional notice or admission announcement.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "body": { "type": "string", "minLength": 2, "maxLength": 600 },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "body", "isActive", "createdAt"]
+    },
+    "Enquiry": {
+      "title": "Enquiry",
+      "description": "Admission or course enquiry submitted by a prospective student or parent.",
+      "type": "object",
+      "properties": {
+        "enquiryType": { "type": "string", "enum": ["school_admission", "course_enquiry", "general_contact"] },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "parentName": { "type": "string", "minLength": 0, "maxLength": 120 },
+        "dateOfBirth": { "type": "string", "minLength": 0, "maxLength": 30 },
+        "applyingFor": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "mobileNumber": { "type": "string", "minLength": 8, "maxLength": 25 },
+        "email": { "type": "string", "minLength": 0, "maxLength": 140 },
+        "address": { "type": "string", "minLength": 0, "maxLength": 350 },
+        "previousSchool": { "type": "string", "minLength": 0, "maxLength": 160 },
+        "message": { "type": "string", "minLength": 0, "maxLength": 1200 },
+        "status": { "type": "string", "enum": ["new", "reviewed", "contacted"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["enquiryType", "studentName", "applyingFor", "mobileNumber", "status", "createdAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized institution administrator record.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "minLength": 5, "maxLength": 140 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "role": { "type": "string", "enum": ["admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/siteSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteSettings" },
+      "description": "Public website settings and editable institutional content."
+    },
+    "/courses/{courseId}": {
+      "schema": { "$ref": "#/entities/Course" },
+      "description": "Course catalog across School, Kindergarten, ITI, Diploma, Computer, and Paramedical categories."
+    },
+    "/gallery/{itemId}": {
+      "schema": { "$ref": "#/entities/GalleryItem" },
+      "description": "Categorized gallery images managed by the administrator."
+    },
+    "/announcements/{announcementId}": {
+      "schema": { "$ref": "#/entities/Announcement" },
+      "description": "Official institution notices and admission updates."
+    },
+    "/enquiries/{enquiryId}": {
+      "schema": { "$ref": "#/entities/Enquiry" },
+      "description": "Private admission and contact enquiries submitted by visitors; readable only by authenticated administrators."
+    },
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Authorized administrator registry."
+    }
+  }
+}
